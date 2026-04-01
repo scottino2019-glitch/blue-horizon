@@ -280,16 +280,13 @@
 
 <script>
     // --- 1. DATI (Simulazione JSON) ---
-    // Aggiungi qui le date occupate in formato AAAA-MM-GG
     const dateOccupate = ["2026-04-10", "2026-04-11", "2026-05-15", "2026-06-20"];
-    
-    // Gestione Post-it
     const datiPostIt = [
         { titolo: "Aprile", testo: "Pasqua quasi esaurita", status: "info" },
         { titolo: "Giugno", testo: "Soggiorno min. 5 notti", status: "occupied" }
     ];
 
-    // --- 2. LOGICA SLIDER (Il tuo originale) ---
+    // --- 2. LOGICA SLIDER ---
     let currentIndex = 0;
     function moveSlide(step) {
         const slides = document.getElementById('slider');
@@ -299,7 +296,7 @@
     }
     setInterval(() => moveSlide(1), 5000);
 
-    // --- 3. LOGICA CALENDARIO & POST-IT ---
+    // --- 3. LOGICA CALENDARIO ---
     let currentMonth = new Date(2026, 3, 1); // Aprile 2026
     let selectedDates = [];
 
@@ -312,10 +309,13 @@
         const mesi = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
         display.innerText = `${mesi[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
 
+        // Intestazione giorni
         ['L','M','M','G','V','S','D'].forEach(d => grid.innerHTML += `<div class="day-name">${d}</div>`);
         
         const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
         const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
+        
+        // Calcolo offset (Lunedì come primo giorno)
         let offset = firstDay === 0 ? 6 : firstDay - 1;
 
         for(let s=0; s<offset; s++) grid.innerHTML += `<div></div>`;
@@ -329,43 +329,41 @@
             dayEl.className = `day ${isOccupied ? 'occupied' : ''} ${isSelected ? 'selected' : ''}`;
             dayEl.innerText = d;
             
-            if(!isOccupied) dayEl.onclick = () => selectDay(dateStr);
+            if(!isOccupied) {
+                dayEl.onclick = () => selectDay(dateStr);
+            }
             grid.appendChild(dayEl);
         }
     }
-function selectDay(date) {
-    // Se l'utente ha già selezionato due date e clicca ancora, 
-    // oppure se clicca su una data già selezionata (per deselezionarla)
-    if (selectedDates.length >= 2 || selectedDates.includes(date)) {
-        selectedDates = [date]; // Ricomincia da zero con la nuova data
-    } else {
-        // Altrimenti aggiungi la data (secondo click)
-        selectedDates.push(date);
-        selectedDates.sort(); // Mette in ordine: la più piccola è Arrivo, la più grande Partenza
+
+    // FUNZIONE PER SCORRERE I MESI (Ora funzionante)
+    function changeMonth(dir) { 
+        currentMonth.setMonth(currentMonth.getMonth() + dir); 
+        renderCalendar(); // Ridisegna tutto il contenuto del calendario
     }
 
-    // Aggiorna i valori reali che Formspree riceverà
-    const checkinInput = document.getElementById('checkin');
-    const checkoutInput = document.getElementById('checkout');
-    const hint = document.getElementById('selectionHint');
+    function selectDay(date) {
+        if (selectedDates.length >= 2 || selectedDates.includes(date)) {
+            selectedDates = [date]; 
+        } else {
+            selectedDates.push(date);
+            selectedDates.sort();
+        }
 
-    if (selectedDates.length === 1) {
-        checkinInput.value = selectedDates[0];
-        checkoutInput.value = ""; // Svuota la partenza finché non viene scelta
-        hint.innerText = "Arrivo selezionato. Ora scegli la data di partenza.";
-        hint.style.color = "var(--accent-color)";
-    } else if (selectedDates.length === 2) {
-        checkinInput.value = selectedDates[0];
-        checkoutInput.value = selectedDates[1];
-        hint.innerText = `Soggiorno: dal ${selectedDates[0]} al ${selectedDates[1]}`;
-        hint.style.color = "#27ae60";
+        document.getElementById('checkin').value = selectedDates[0] || "";
+        document.getElementById('checkout').value = selectedDates[1] || "";
+        
+        const hint = document.getElementById('selectionHint');
+        if (selectedDates.length === 2) {
+            hint.innerText = `Soggiorno: dal ${selectedDates[0]} al ${selectedDates[1]}`;
+            hint.style.color = "#27ae60";
+        } else {
+            hint.innerText = "Arrivo impostato. Scegli la partenza.";
+            hint.style.color = "var(--accent-color)";
+        }
+        
+        renderCalendar();
     }
-
-    // Ridisegna il calendario per mostrare i pallini colorati aggiornati
-    renderCalendar();
-}
-
-    
 
     function renderPostIts() {
         const board = document.getElementById('postItBoard');
@@ -376,25 +374,19 @@ function selectDay(date) {
         });
     }
 
-    // --- 4. RESET AUTOMATICO DOPO INVIO ---
     document.querySelector('.booking-form').onsubmit = function(e) {
-        // Esegue il reset dopo 1 secondo per lasciare tempo all'invio di Formspree
         setTimeout(() => {
             selectedDates = [];
             document.getElementById('selectionHint').innerText = "";
-            document.getElementById('checkin').value = "";
-            document.getElementById('checkout').value = "";
             renderCalendar();
             e.target.reset();
         }, 1000);
     };
 
-    // Inizializzazione al caricamento
     window.onload = () => { 
         renderCalendar(); 
         renderPostIts(); 
     };
 </script>
-
 </body>
 </html>
