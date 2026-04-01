@@ -333,36 +333,39 @@
             grid.appendChild(dayEl);
         }
     }
-
-    function selectDay(date) {
-        // Logica di sblocco: se ci sono già 2 date o clicchi la stessa, resetta e ricomincia
-        if (selectedDates.length >= 2 || selectedDates.includes(date)) {
-            selectedDates = [date]; 
-        } else {
-            selectedDates.push(date);
-            selectedDates.sort(); // Ordina Arrivo e Partenza correttamente
-        }
-
-        // Aggiorna i campi del form Formspree
-        document.getElementById('checkin').value = selectedDates[0] || "";
-        document.getElementById('checkout').value = selectedDates[1] || "";
-        
-        const hint = document.getElementById('selectionHint');
-        if (selectedDates.length === 2) {
-            hint.innerText = `Soggiorno selezionato: dal ${selectedDates[0]} al ${selectedDates[1]}`;
-            hint.style.color = "#27ae60"; // Un bel verde successo
-        } else {
-            hint.innerText = "Ora seleziona la data di partenza";
-            hint.style.color = "var(--accent-color)";
-        }
-        
-        renderCalendar();
+function selectDay(date) {
+    // Se l'utente ha già selezionato due date e clicca ancora, 
+    // oppure se clicca su una data già selezionata (per deselezionarla)
+    if (selectedDates.length >= 2 || selectedDates.includes(date)) {
+        selectedDates = [date]; // Ricomincia da zero con la nuova data
+    } else {
+        // Altrimenti aggiungi la data (secondo click)
+        selectedDates.push(date);
+        selectedDates.sort(); // Mette in ordine: la più piccola è Arrivo, la più grande Partenza
     }
 
-    function changeMonth(dir) { 
-        currentMonth.setMonth(currentMonth.getMonth() + dir); 
-        renderCalendar(); 
+    // Aggiorna i valori reali che Formspree riceverà
+    const checkinInput = document.getElementById('checkin');
+    const checkoutInput = document.getElementById('checkout');
+    const hint = document.getElementById('selectionHint');
+
+    if (selectedDates.length === 1) {
+        checkinInput.value = selectedDates[0];
+        checkoutInput.value = ""; // Svuota la partenza finché non viene scelta
+        hint.innerText = "Arrivo selezionato. Ora scegli la data di partenza.";
+        hint.style.color = "var(--accent-color)";
+    } else if (selectedDates.length === 2) {
+        checkinInput.value = selectedDates[0];
+        checkoutInput.value = selectedDates[1];
+        hint.innerText = `Soggiorno: dal ${selectedDates[0]} al ${selectedDates[1]}`;
+        hint.style.color = "#27ae60";
     }
+
+    // Ridisegna il calendario per mostrare i pallini colorati aggiornati
+    renderCalendar();
+}
+
+    
 
     function renderPostIts() {
         const board = document.getElementById('postItBoard');
