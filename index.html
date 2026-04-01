@@ -343,27 +343,44 @@
     }
 
     function selectDay(date) {
-        if (selectedDates.length >= 2 || selectedDates.includes(date)) {
-            selectedDates = [date]; 
-        } else {
-            selectedDates.push(date);
-            selectedDates.sort();
-        }
-
-        document.getElementById('checkin').value = selectedDates[0] || "";
-        document.getElementById('checkout').value = selectedDates[1] || "";
-        
-        const hint = document.getElementById('selectionHint');
-        if (selectedDates.length === 2) {
-            hint.innerText = `Soggiorno: dal ${selectedDates[0]} al ${selectedDates[1]}`;
-            hint.style.color = "#27ae60";
-        } else {
-            hint.innerText = "Arrivo impostato. Scegli la partenza.";
-            hint.style.color = "var(--accent-color)";
-        }
-        
-        renderCalendar();
+    // Caso 1: Se clicchi su una data già selezionata, DESELEZIONA TUTTO
+    if (selectedDates.includes(date)) {
+        selectedDates = [];
+    } 
+    // Caso 2: Se hai già selezionato Arrivo e Partenza e clicchi una TERZA data, RESETTA TUTTO e prendi la nuova come Arrivo
+    else if (selectedDates.length >= 2) {
+        selectedDates = [date];
+    } 
+    // Caso 3: Aggiungi la data normalmente (primo o secondo click)
+    else {
+        selectedDates.push(date);
+        selectedDates.sort(); // Ordina cronologicamente
     }
+
+    // Aggiorna i campi nascosti per il modulo
+    const checkinInput = document.getElementById('checkin');
+    const checkoutInput = document.getElementById('checkout');
+    const hint = document.getElementById('selectionHint');
+
+    // Sincronizza i valori del form con la selezione grafica
+    checkinInput.value = selectedDates[0] || "";
+    checkoutInput.value = selectedDates[1] || "";
+
+    // Aggiorna il testo di aiuto per l'utente
+    if (selectedDates.length === 0) {
+        hint.innerText = "Seleziona la data di arrivo";
+        hint.style.color = "var(--text-dark)";
+    } else if (selectedDates.length === 1) {
+        hint.innerText = "Arrivo impostato. Ora scegli la partenza.";
+        hint.style.color = "var(--accent-color)";
+    } else if (selectedDates.length === 2) {
+        hint.innerText = `Soggiorno: dal ${selectedDates[0]} al ${selectedDates[1]}`;
+        hint.style.color = "#27ae60";
+    }
+
+    // Forza il ridisegno del calendario per aggiornare i colori dei cerchietti
+    renderCalendar();
+}
 
     function renderPostIts() {
         const board = document.getElementById('postItBoard');
